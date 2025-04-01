@@ -1,0 +1,79 @@
+<?php
+
+declare(strict_types=1);
+
+use Hyva\Theme\Model\ViewModelRegistry;
+use Hyva\Theme\ViewModel\Store;
+use Magento\Framework\Escaper;
+use Magento\Framework\View\Element\Template;
+
+//phpcs:disable Generic.Files.LineLength
+
+/** @var Template $block */
+/** @var Escaper $escaper */
+/** @var ViewModelRegistry $viewModels */
+
+/** @var Store $viewModelStore */
+$viewModelStore = $viewModels->require(Store::class);
+$block_id = $block->getData('block_identifier');
+$container_cssClass = $block->getData('container_css_class');
+$skeleton_length = $block->getData('skeleton_length') ?? 6;
+
+if (!$block_id) {
+    return;
+}
+?>
+<div class="flex flex-col w-full" x-data="asyncCms_<?= $escaper->escapeHtml($block_id) ;?>()">
+    <div class="flex flex-col gap-4" x-show="!show" x-cloak>
+        <template x-for="i in <?= $escaper->escapeHtml($skeleton_length); ?>">
+            <div class="bg-gray-800 opacity-15 p-1 rounded-md basis-full animate-pulse"></div>
+        </template>
+    </div>
+    <template x-for="cms in cmsBlocks">
+        <div x-show="show" x-transition.duration.2500ms class="<?= $escaper->escapeHtml($container_cssClass); ?>" x-html="cms.content"></div>
+    </template>
+</div>
+<script async>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('asyncCms_<?= $escaper->escapeHtml($block_id) ;?>', () => {
+            return {
+                show: false,
+                cmsBlocks: [{
+                    content: '',
+                    title: '',
+                    identifier: ''
+                }],
+                init: async function () {
+                    try {
+                        let response = await fetch(`${BASE_URL}graphql`, {
+                            method: 'POST',
+                            headers: Object.assign({
+                                'Content-Type': 'application/json;charset=utf-8',
+                                'Store': '<?= $escaper->escapeJs($viewModelStore->getStoreCode()) ?>'
+                            }),
+                            body: JSON.stringify({
+                                query: `{
+                                    cmsBlocks(identifiers: ["<?= $escaper->escapeJs($block_id) ?>"]) {
+                                        items {
+                                            content
+                                            title
+                                            identifier
+                                        }
+                                    }
+                                }`
+                            })
+                        });
+                        let { data: { cmsBlocks:  { items } } = {} } = await response.json() || {};
+                        this.cmsBlocks = [
+                            ...items
+                        ]
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        this.show = true;
+                    }
+                }
+            }
+        });
+    });
+</script>
