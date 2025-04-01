@@ -4,11 +4,7 @@
 
 Project based on the Magento2 + Hyvä.
 
-![Magento Logo](https://upload.wikimedia.org/wikipedia/commons/3/3f/Magento_Logo.svg)
-![Hyvä Logo](https://hyva.io/assets/images/hyva-logo.svg)
-![GraphQL Logo](https://upload.wikimedia.org/wikipedia/commons/1/17/GraphQL_Logo.svg)
-
-Alpine.js + TailwindCSS + skeleton technique.
+Alpine.js + TailwindCSS + skeleton technique + GraphQL.
 
 ### Installation
 
